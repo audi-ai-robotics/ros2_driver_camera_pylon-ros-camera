@@ -10,6 +10,15 @@
     #  device list will be used
     device_user_id: ""
 
+    #  Loads camera settings saved to this user set in Pylon Viewer
+    startup_user_set: UserSet1
+
+    #  GigE packet size; use 8192 only when jumbo frames are configured end to end
+    mtu_size: 1500
+
+    enable_status_publisher: false
+    enable_current_params_publisher: false
+
     #  The CameraInfo URL (Uniform Resource Locator) where the optional intrinsic
     #  camera calibration parameters are stored. This URL string will be parsed
     #  from the ROS-CameraInfoManager:

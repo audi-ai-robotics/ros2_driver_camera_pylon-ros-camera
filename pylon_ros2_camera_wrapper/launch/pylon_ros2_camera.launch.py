@@ -26,11 +26,6 @@ def _launch_node(context: LaunchContext):
 
     config_file = LaunchConfiguration('config_file')
 
-    mtu_size = LaunchConfiguration('mtu_size')
-    startup_user_set = LaunchConfiguration('startup_user_set')
-    enable_status_publisher = LaunchConfiguration('enable_status_publisher')
-    enable_current_params_publisher = LaunchConfiguration('enable_current_params_publisher')
-
     respawn = LaunchConfiguration('respawn')
     respawn_str = respawn.perform(context)
     respawn_bool = respawn_str.lower() == 'true'
@@ -54,15 +49,7 @@ def _launch_node(context: LaunchContext):
                 respawn=respawn_bool,
                 emulate_tty=True,
                 prefix=launch_prefix,
-                parameters=[
-                    config_file,
-                    {
-                        'mtu_size': mtu_size,
-                        'startup_user_set': startup_user_set,
-                        'enable_status_publisher': enable_status_publisher,
-                        'enable_current_params_publisher': enable_current_params_publisher
-                    }
-                ]
+                parameters=[config_file]
             ),
         ]
 
@@ -93,31 +80,6 @@ def generate_launch_description():
         description='Camera parameters structured in a .yaml file.'
     )
 
-    declare_mtu_size_cmd = DeclareLaunchArgument(
-        'mtu_size',
-        default_value='1500',
-        description='Maximum transfer unit size. To enable jumbo frames, set it to a high value (8192 recommended)'
-    )
-
-    declare_startup_user_set_cmd = DeclareLaunchArgument(
-        'startup_user_set',
-        # possible value: Default, UserSet1, UserSet2, UserSet3, CurrentSetting
-        default_value='CurrentSetting',
-        description='Specific user set defining user parameters to run the camera.'
-    )
-
-    declare_enable_status_publisher_cmd = DeclareLaunchArgument(
-        'enable_status_publisher',
-        default_value='false',
-        description='Enable/Disable the status publishing.'
-    )
-
-    declare_enable_current_params_publisher_cmd = DeclareLaunchArgument(
-        'enable_current_params_publisher',
-        default_value='false',
-        description='Enable/Disable the current parameter publishing.'
-    )
-
     declare_respawn_cmd = DeclareLaunchArgument(
         'respawn',
         default_value='false',
@@ -131,11 +93,6 @@ def generate_launch_description():
     ld.add_action(declare_camera_id_cmd)
 
     ld.add_action(declare_config_file_cmd)
-    ld.add_action(declare_mtu_size_cmd)
-    ld.add_action(declare_startup_user_set_cmd)
-    ld.add_action(declare_enable_status_publisher_cmd)
-    ld.add_action(declare_enable_current_params_publisher_cmd)
-
     ld.add_action(declare_respawn_cmd)
 
     ld.add_action(OpaqueFunction(function=_launch_node))

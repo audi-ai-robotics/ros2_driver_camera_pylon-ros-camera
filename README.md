@@ -70,7 +70,7 @@ Starting the *pylon_ros2_camera_node* starts the acquisition from a given Basler
 The *pylon_ros2_camera_node* can be started thanks to a dedicated launch file thanks to the command:  
 ``ros2 launch pylon_ros2_camera_wrapper pylon_ros2_camera.launch.py``  or  
 ``ros2 launch pylon_ros2_camera_wrapper my_blaze.launch.py`` for the blaze  
-Several parameters can be set through the launch file and the user parameter file loaded through it (the `pylon_ros2_camera_wrapper/config/default.yaml` user parameter file is loaded by default, `pylon_ros2_camera_wrapper/config/my_blaze.yaml` for the blaze).
+Driver parameters are configured in the YAML file loaded by the launch file (`pylon_ros2_camera_wrapper/config/default.yaml` by default, `pylon_ros2_camera_wrapper/config/my_blaze.yaml` for the blaze).
 
 Acquisition from a specific camera is possible by setting the `device_user_id` parameter. If no specific camera is specified, the first available camera is connected automatically.  
 
@@ -82,10 +82,9 @@ Acquisition images are published through the `[Camera name]/[Node name]/[image_r
 To visualize the images, [rqt](https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Introducing-Turtlesim/Introducing-Turtlesim.html#install-rqt) can be used. Add an image viewer plugin through thanks to the contextual menu (Plugin -> Visualization -> Image View) and select the `[Camera name]/[Node name]/[image_raw]` topic to display the acquired and published images. Beware that if you are using rviz2 to visualize the acquired images, this tool is not able not vizualize correctly images encoded in Bayer.  
 The 3d point clouds acquired by the blaze can be visualized thanks to [rviz2](https://index.ros.org/p/rviz2/).  
 
-For camera models other than the blaze, specific user set can be specified thanks to the `startup_user_set` parameter.  
-``ros2 launch pylon_ros2_camera_wrapper pylon_ros2_camera.launch.py startup_user_set:=Default``  or ``ros2 launch pylon_ros2_camera_wrapper pylon_ros2_camera.launch.py startup_user_set:=UserSet1`` or ``ros2 launch pylon_ros2_camera_wrapper pylon_ros2_camera.launch.py startup_user_set:=UserSet2`` or ``ros2 launch pylon_ros2_camera_wrapper pylon_ros2_camera.launch.py startup_user_set:=UserSet3``  
+For camera models other than the blaze, select the startup user set in `pylon_ros2_camera_wrapper/config/default.yaml` with the `startup_user_set` parameter. The default in this fork is `UserSet1`. Configure the camera features in Pylon Viewer and save them to that user set on the camera before starting the ROS 2 driver. The launch file loads the selected user set at startup. Avoid setting parameters such as `exposure` or `gain` in the YAML if those values should remain controlled by the saved camera user set.
 
-Beware that some parameters implemented by the driver, like for instance the parameter `startup_user_set`, can be set through 1. the `pylon_ros2_camera_wrapper/config/default.yaml` user parameter file, 2. the `pylon_ros2_camera.launch.py` driver launch file, and 3. the command line arguments of the launch command to start the driver. A parameter value set as an argument of the launch command to start the driver will overwrite the value set in the driver launch file itself, that will overwrite the value set in the user parameter file.    
+Driver parameters are read from the selected YAML file. To use another configuration file, pass the `config_file` launch argument; camera and transport parameters are not overridden by separate launch arguments.
 
 ### Acquisition mode and frame rate
 
@@ -610,7 +609,7 @@ Verify that:
 1. The `device_user_id` is spelled correctly (it is case-sensitive).
 2. The camera is powered on and connected to the network or USB.
 3. No other process has the camera open exclusively.
-4. For GigE cameras, the MTU size is configured correctly (add `mtu_size:=8192` for jumbo frames).
+4. For GigE cameras, the MTU size is configured correctly (set `mtu_size: 8192` in `pylon_ros2_camera_wrapper/config/default.yaml` for jumbo frames, after configuring jumbo frames on the network adapter and camera).
 
 
 ## Known issues
@@ -659,7 +658,7 @@ If your network adapter supports jumbo frames, you set the adapter's MTU to 8192
 
 If you are working with the pylon Viewer application, you can set the packet size by first selecting a camera from the tree in the "Device" pane. In the "Features" pane, expand the features group that shows the camera's name, expand the "Transport Layer" parameters group, and set the "Packet Size" parameter to 8192. If you write your own application, use the camera API to set the PacketSize parameter to 8192.
 
-It is possible to change the packet size by changing the default value of the `mtu_size` parameter in the pylon ROS2 wrapper launch file. When the camera is grabbing, it is not possible to modify this parameter.
+It is possible to change the packet size by changing the `mtu_size` parameter in `pylon_ros2_camera_wrapper/config/default.yaml`. When the camera is grabbing, it is not possible to modify this parameter.
 
 #### Real-time Priority (GigE devices)
 
