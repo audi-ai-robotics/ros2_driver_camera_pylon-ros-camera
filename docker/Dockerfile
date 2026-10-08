@@ -62,6 +62,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         python3-colcon-common-extensions \
         python3-rosdep \
+        python3-opencv \
         ros-${ROS_DISTRO}-diagnostic-updater \
         ros-${ROS_DISTRO}-pcl-ros \
         ros-${ROS_DISTRO}-cv-bridge \

@@ -259,6 +259,53 @@ ros2 run rqt_image_view rqt_image_view
 
 Select `/my_camera/pylon_ros2_camera_node/image_raw` in the topic dropdown.
 
+## ChArUco-Kalibrierung
+
+1. In den Docker-Ordner wechseln:
+
+```bash
+cd ~/Desktop/ros2_driver_camera_pylon-ros-camera/docker
+```
+
+2. Pylon Viewer schließen und den Kameratreiber starten:
+
+```bash
+docker compose up -d
+```
+
+3. Kalibrierungs-GUI starten:
+
+```bash
+docker compose exec -T pylon_ros2_camera /entrypoint.sh \
+    python3 /tools/charuco_calibrate_ros.py \
+    --output /tmp/camera_calibration_recalibrated.yaml
+```
+
+4. Im Livebild das calib.io-Board vollständig zeigen. Boarddaten: 24 Spalten,
+   17 Zeilen, Feldgröße 15 mm, Markergröße 11 mm, `DICT_5X5`, ChArUco Legacy.
+   Mit `s` mindestens 12 Ansichten aufnehmen. Position, Neigung und Abstand
+   zwischen den Aufnahmen variieren.
+
+5. `q` drücken, um zu kalibrieren. Den Rohbild-/Entzerrt-Vergleich mit einer
+   beliebigen Taste schließen.
+
+6. Die neue Kalibrierungsdatei in den Docker-Ordner kopieren:
+
+```bash
+docker cp "$(docker compose ps -q pylon_ros2_camera)":/tmp/camera_calibration_recalibrated.yaml \
+    ./camera_calibration.yaml
+```
+
+7. Den Treiber neu starten, damit er die neue Datei lädt:
+
+```bash
+docker compose up -d --force-recreate pylon_ros2_camera
+```
+
+Der Treiber lädt die Datei über `camera_info_url`. Das entzerrte Bild liegt auf
+`/my_camera/pylon_ros2_camera_node/image_rect`. Die Kamera ist auf 5 Hz und
+MTU 1500 konfiguriert.
+
 ---
 
 ## USB3 Vision cameras
