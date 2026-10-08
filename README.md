@@ -177,6 +177,9 @@ USB cameras must be disconnected and then reconnected after setting a new device
 - **device_user_id**  
   The DeviceUserID of the camera. If empty, the first camera found in the device list will be used.
 
+- **device_ip_address**
+  The IPv4 address used to select a Basler GigE camera. If both `device_user_id` and `device_ip_address` are set, both must match the same camera. An empty value disables IP filtering.
+
 - **camera_info_url (not for the blaze)**  
   The CameraInfo URL (Uniform Resource Locator) where the optional intrinsic camera calibration parameters are stored. This URL string will be parsed from the CameraInfoManager.
 

@@ -183,6 +183,12 @@ std::unique_ptr<PylonROS2Camera> createFromDevice(PYLON_CAM_TYPE cam_type, Pylon
 
 std::unique_ptr<PylonROS2Camera> PylonROS2Camera::create(const std::string& device_user_id_to_open)
 {
+    return create(device_user_id_to_open, "");
+}
+
+std::unique_ptr<PylonROS2Camera> PylonROS2Camera::create(
+    const std::string& device_user_id_to_open, const std::string& device_ip_address_to_open)
+{
     try
     {
         // Before using any pylon methods, the pylon runtime must be initialized.
@@ -201,7 +207,7 @@ std::unique_ptr<PylonROS2Camera> PylonROS2Camera::create(const std::string& devi
         else
         {
             Pylon::DeviceInfoList_t::const_iterator it;
-            if (device_user_id_to_open.empty())
+            if (device_user_id_to_open.empty() && device_ip_address_to_open.empty())
             {
                 for (it = device_list.begin(); it != device_list.end(); ++it)
                 {
@@ -229,15 +235,27 @@ std::unique_ptr<PylonROS2Camera> PylonROS2Camera::create(const std::string& devi
             bool found_desired_device = false;
             for ( it = device_list.begin(); it != device_list.end(); ++it )
             {
-                std::string device_user_id_found(it->GetUserDefinedName());
-                if ( (0 == device_user_id_to_open.compare(device_user_id_found)) ||
-                     (device_user_id_to_open.length() < device_user_id_found.length() &&
-                     (0 == device_user_id_found.compare(device_user_id_found.length() -
-                                                         device_user_id_to_open.length(),
-                                                         device_user_id_to_open.length(),
-                                                         device_user_id_to_open) )
-                     )
-                   )
+                bool user_id_matches = device_user_id_to_open.empty();
+                if (!device_user_id_to_open.empty())
+                {
+                    std::string device_user_id_found(it->GetUserDefinedName());
+                    user_id_matches =
+                        (0 == device_user_id_to_open.compare(device_user_id_found)) ||
+                        (device_user_id_to_open.length() < device_user_id_found.length() &&
+                         0 == device_user_id_found.compare(device_user_id_found.length() -
+                                                           device_user_id_to_open.length(),
+                                                           device_user_id_to_open.length(),
+                                                           device_user_id_to_open));
+                }
+
+                bool ip_address_matches = device_ip_address_to_open.empty();
+                if (!device_ip_address_to_open.empty() && it->IsDeviceClassAvailable() &&
+                    it->GetDeviceClass() == "BaslerGigE")
+                {
+                    ip_address_matches = device_ip_address_to_open == std::string(it->GetIpAddress());
+                }
+
+                if (user_id_matches && ip_address_matches)
                 {
                     found_desired_device = true;
                     break;
@@ -256,8 +274,9 @@ std::unique_ptr<PylonROS2Camera> PylonROS2Camera::create(const std::string& devi
             else
             {
                 RCLCPP_ERROR_STREAM(LOGGER, "Couldn't find the camera that matches the "
-                    << "specified Device User ID: " << device_user_id_to_open << "! "
-                    << "Either the ID is wrong or the camera device is not connected (yet)");
+                    << "specified camera identity. Device User ID: " << device_user_id_to_open
+                    << ", IP address: " << device_ip_address_to_open << ". "
+                    << "Check the configured identity and camera connection.");
 
                 Pylon::PylonTerminate();
                 return nullptr;

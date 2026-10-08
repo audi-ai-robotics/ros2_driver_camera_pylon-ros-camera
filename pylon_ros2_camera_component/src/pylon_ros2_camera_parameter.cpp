@@ -76,6 +76,7 @@ PylonROS2CameraParameter::PylonROS2CameraParameter() :
     grab_strategy_(0),
     camera_frame_("pylon_camera"),
     device_user_id_(""),
+    device_ip_address_(""),
     frame_rate_(5.0),
     camera_info_url_(""),
     image_encoding_("")
@@ -112,6 +113,16 @@ void PylonROS2CameraParameter::readFromRosParameterServer(rclcpp::Node& nh)
     }
     
     nh.get_parameter("device_user_id", this->device_user_id_);
+
+    // device IP address
+    RCLCPP_DEBUG(LOGGER, "---> device_ip_address");
+
+    if (!nh.has_parameter("device_ip_address"))
+    {
+        nh.declare_parameter<std::string>("device_ip_address", "");
+    }
+
+    nh.get_parameter("device_ip_address", this->device_ip_address_);
 
     // frame rate
     RCLCPP_DEBUG(LOGGER, "---> frame_rate");
@@ -557,13 +568,14 @@ void PylonROS2CameraParameter::setDeviceUserId(rclcpp::Node& nh, const std::stri
 
 void PylonROS2CameraParameter::validateParameterSet(rclcpp::Node& nh)
 {
-    if (!this->device_user_id_.empty())
+    if (!this->device_user_id_.empty() || !this->device_ip_address_.empty())
     {
-        RCLCPP_INFO_STREAM(LOGGER, "Trying to connect the camera device with the following device user id: " << this->device_user_id_.c_str());
+        RCLCPP_INFO_STREAM(LOGGER, "Trying to connect camera matching DeviceUserID='"
+            << this->device_user_id_ << "', IP address='" << this->device_ip_address_ << "'");
     }
     else
     {
-        RCLCPP_INFO_STREAM(LOGGER, "No Device User ID set -> Will connect the first available camera device");
+        RCLCPP_INFO_STREAM(LOGGER, "No camera identity filter set -> Will connect the first available camera device");
     }
 
     if (this->frame_rate_ < 0 && this->frame_rate_ != -1)
@@ -604,6 +616,11 @@ void PylonROS2CameraParameter::validateParameterSet(rclcpp::Node& nh)
 const std::string& PylonROS2CameraParameter::deviceUserID() const
 {
     return this->device_user_id_;
+}
+
+const std::string& PylonROS2CameraParameter::deviceIpAddress() const
+{
+    return this->device_ip_address_;
 }
 
 std::string PylonROS2CameraParameter::shutterModeString() const

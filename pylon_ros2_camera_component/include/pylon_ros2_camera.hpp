@@ -71,6 +71,13 @@ public:
     static std::unique_ptr<PylonROS2Camera> create(const std::string& device_user_id);
 
     /**
+     * Create a new PylonROS2Camera instance based on camera identity filters.
+     * If both filters are set, both must match the same device.
+     */
+    static std::unique_ptr<PylonROS2Camera> create(
+        const std::string& device_user_id, const std::string& device_ip_address);
+
+    /**
      * Configures the camera according to the software trigger mode.
      * @return true if all the configuration could be set up.
      */

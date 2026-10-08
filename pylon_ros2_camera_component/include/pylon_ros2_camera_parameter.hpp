@@ -67,6 +67,11 @@ public:
     const std::string& deviceUserID() const;
 
     /**
+     * Getter for the device_ip_address_ set from ros-parameter server
+     */
+    const std::string& deviceIpAddress() const;
+
+    /**
      * Setter for the device_user_id_  to the class and as well
      * the ros-parameter server
      */
@@ -354,6 +359,11 @@ protected:
      * device list will be used
      */
     std::string device_user_id_;
+
+    /**
+     * The IP address of a GigE camera. If empty, this filter is not used.
+     */
+    std::string device_ip_address_;
 
     /**
      * The desired publisher frame rate if listening to the topics.

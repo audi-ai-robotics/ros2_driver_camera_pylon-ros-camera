@@ -10,6 +10,9 @@
     #  device list will be used
     device_user_id: ""
 
+    #  IP address of a Basler GigE camera; empty disables IP filtering
+    device_ip_address: "10.10.10.70"
+
     #  Loads camera settings saved to this user set in Pylon Viewer
     startup_user_set: UserSet1
 

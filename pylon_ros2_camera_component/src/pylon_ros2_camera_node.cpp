@@ -604,11 +604,12 @@ void PylonROS2CameraNode::initDiagnostics()
 
 bool PylonROS2CameraNode::initAndRegister()
 {
-  this->pylon_camera_ = PylonROS2Camera::create(this->pylon_camera_parameter_set_.deviceUserID());
-  if (this->pylon_camera_parameter_set_.deviceUserID() != "")
-    RCLCPP_INFO_STREAM(LOGGER, "Pylon camera instance created with the following user id: " << this->pylon_camera_parameter_set_.deviceUserID());
-  else
-    RCLCPP_INFO(LOGGER, "No user id for the camera has been set");
+  this->pylon_camera_ = PylonROS2Camera::create(
+      this->pylon_camera_parameter_set_.deviceUserID(),
+      this->pylon_camera_parameter_set_.deviceIpAddress());
+  RCLCPP_INFO_STREAM(LOGGER, "Camera selection filters: DeviceUserID='"
+      << this->pylon_camera_parameter_set_.deviceUserID() << "', IP address='"
+      << this->pylon_camera_parameter_set_.deviceIpAddress() << "'");
 
   if (this->pylon_camera_ == nullptr)
   {
@@ -620,19 +621,23 @@ bool PylonROS2CameraNode::initAndRegister()
       this->component_status_pub_->publish(this->cm_status_);
     }
 
-    RCLCPP_WARN_STREAM(LOGGER, "Failed to connect camera device with device user id: "<< this->pylon_camera_parameter_set_.deviceUserID() << ". "
-                            << "Wait and retry to connect until the specified camera is available...");
+    RCLCPP_WARN_STREAM(LOGGER, "Failed to connect camera matching DeviceUserID='"
+      << this->pylon_camera_parameter_set_.deviceUserID() << "', IP address='"
+      << this->pylon_camera_parameter_set_.deviceIpAddress() << "'. Waiting for it to become available...");
 
     // wait and retry until a camera is present
     rclcpp::Time end = rclcpp::Node::now() + std::chrono::duration<double>(15);
     rclcpp::Rate r(0.5);
     while (rclcpp::ok() && this->pylon_camera_ == nullptr)
     {
-      this->pylon_camera_ = PylonROS2Camera::create(this->pylon_camera_parameter_set_.deviceUserID());
+      this->pylon_camera_ = PylonROS2Camera::create(
+          this->pylon_camera_parameter_set_.deviceUserID(),
+          this->pylon_camera_parameter_set_.deviceIpAddress());
       if (this->pylon_camera_ == nullptr)
       {
-        RCLCPP_WARN_STREAM(LOGGER, "Failed to connect camera device with device user id: "<< this->pylon_camera_parameter_set_.deviceUserID() << ". "
-                                    << "Trying again in a bit...");
+        RCLCPP_WARN_STREAM(LOGGER, "Camera with DeviceUserID='"
+            << this->pylon_camera_parameter_set_.deviceUserID() << "', IP address='"
+            << this->pylon_camera_parameter_set_.deviceIpAddress() << "' is not available yet. Retrying...");
       }
 
       if (rclcpp::Node::now() > end)
