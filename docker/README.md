@@ -306,6 +306,49 @@ Der Treiber lädt die Datei über `camera_info_url`. Das entzerrte Bild liegt au
 `/my_camera/pylon_ros2_camera_node/image_rect`. Die Kamera ist auf 5 Hz und
 MTU 1500 konfiguriert.
 
+## Hand-to-Eye: manuelle Bild-/ABB-Pose-Aufnahme
+
+Die Basler bleibt fest montiert; das ChArUco-Board muss während der gesamten
+Messreihe starr am ABB-Greifer/Flansch befestigt sein. Auf diesem PC läuft nur
+der Kamera-Container. Der ABB-Treiber mit `robot_state_publisher` läuft auf
+einem zweiten PC im selben Netzwerk und veröffentlicht `/tf` und `/tf_static`.
+Beide Container benötigen Host-Networking, dieselbe `ROS_DOMAIN_ID` und
+erreichbare ROS-2-DDS-Discovery (kein Localhost-only-Modus/Firewall-Block).
+Gleiche ROS-2-Distribution und DDS-Implementierung auf beiden PCs sind
+empfohlen. Die Systemuhren müssen per NTP/chrony synchron sein: Die
+Bild-Zeitstempel werden für TF-Abfragen auf dem ABB-PC verwendet.
+
+Vor der Aufnahme auf diesem PC prüfen, ob ABB-TF und kalibrierte Intrinsik
+ankommen (die Kommandos laufen im Kamera-Container):
+
+```bash
+cd ~/Desktop/ros2_driver_camera_pylon-ros-camera/docker
+docker compose exec pylon_ros2_camera /entrypoint.sh ros2 topic list
+docker compose exec pylon_ros2_camera /entrypoint.sh ros2 run tf2_ros tf2_echo base_link flange
+# tf2_echo mit Ctrl+C beenden; camera_info muss eine nichtleere K-Matrix haben:
+docker compose exec pylon_ros2_camera /entrypoint.sh ros2 topic echo --once /my_camera/pylon_ros2_camera_node/camera_info
+```
+
+Nach der ersten Anpassung des Dockerfiles einmal das Kamera-Image neu bauen
+und den Treiber-Container neu starten. Dann den Recorder starten:
+
+```bash
+docker compose build pylon_ros2_camera
+docker compose up -d --force-recreate pylon_ros2_camera
+docker compose exec -T pylon_ros2_camera /entrypoint.sh \
+    python3 /tools/charuco_hand_eye_capture.py
+```
+
+ABB in eine sichere Pose fahren und **anhalten**. Das Board vollständig zeigen,
+im Livebild mindestens sechs erkannte ChArUco-Ecken prüfen, mit `s` ein
+Bild-/Pose-Paar speichern. Für circa 20–30 deutlich verschiedene Posen wiederholen,
+besonders die Neigung des Boards variieren. `q` beendet die Aufnahme. Die Paare
+liegen auf dem Kamera-PC unter `docker/hand_eye_data/` als `sample_XXXX.png`
+und `sample_XXXX.json` (Zeitstempel, Intrinsik, Boarddaten und
+`base_link`-nach-`flange`-Transformation). Fehlende TF zum Bildzeitpunkt,
+veraltete Bilder oder fehlende Intrinsik verhindern das Speichern. Das Skript
+berechnet noch keine Hand-Auge-Extrinsik.
+
 ---
 
 ## USB3 Vision cameras

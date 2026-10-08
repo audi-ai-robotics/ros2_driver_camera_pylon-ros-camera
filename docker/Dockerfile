@@ -69,6 +69,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ros-${ROS_DISTRO}-image-transport \
         ros-${ROS_DISTRO}-camera-info-manager \
         ros-${ROS_DISTRO}-image-geometry \
+        ros-${ROS_DISTRO}-tf2-ros \
     && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------------------------------------------------------

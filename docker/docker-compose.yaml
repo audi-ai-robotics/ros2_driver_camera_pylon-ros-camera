@@ -79,6 +79,8 @@ services:
     # Bind-mount the calibration helper so it can be run in the ROS container.
     volumes:
       - ../tools/charuco_calibrate_ros.py:/tools/charuco_calibrate_ros.py:ro
+      - ../tools/charuco_hand_eye_capture.py:/tools/charuco_hand_eye_capture.py:ro
+      - ./hand_eye_data:/data/hand_eye
       - ./camera_calibration.yaml:/calibration/camera_calibration.yaml:ro
       - ./camera_config.yaml:/ros2_ws/install/pylon_ros2_camera_wrapper/share/pylon_ros2_camera_wrapper/config/default.yaml:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
