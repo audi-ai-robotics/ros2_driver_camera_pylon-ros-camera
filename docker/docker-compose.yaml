@@ -84,7 +84,12 @@ services:
       - ./camera_calibration.yaml:/calibration/camera_calibration.yaml:ro
       - ./camera_config.yaml:/ros2_ws/install/pylon_ros2_camera_wrapper/share/pylon_ros2_camera_wrapper/config/default.yaml:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY}:/tmp/.Xauthority:ro
+      - type: bind
+        source: ${XAUTHORITY:?Set XAUTHORITY to the existing desktop Xauthority file}
+        target: /tmp/.Xauthority
+        read_only: true
+        bind:
+          create_host_path: false
 
     # -------------------------------------------------------------------------
     # Optional: override the default camera configuration.
@@ -101,7 +106,8 @@ services:
     command: >
       ros2 launch pylon_ros2_camera_wrapper pylon_ros2_camera.launch.py
 
-    restart: unless-stopped
+    # Start after desktop login: boot-time mounts can create root-owned /run/user paths.
+    restart: "no"
 
   # ---------------------------------------------------------------------------
   # USB3 Vision cameras (e.g. Basler dart, ace USB3)

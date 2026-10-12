@@ -114,6 +114,26 @@ docker compose up -d       # detached (background)
 docker compose down        # stop and remove the container
 ```
 
+Start this service **after desktop login**, from a terminal with `DISPLAY` and
+`XAUTHORITY` set. The Xauthority source must be an existing file; Compose will
+not create a missing source directory.
+
+Boot-time automatic restart is intentionally disabled. Docker can otherwise
+create a missing `/run/user/1000/gdm/Xauthority` mount source as root before
+login, leaving `/run/user/1000` root-owned and breaking the systemd user
+manager and Snap applications such as Firefox. Detached mode still works,
+but the service must be started manually after each boot.
+
+For an existing container created with the old restart policy, disable its
+automatic restart immediately (editing Compose alone does not change it):
+
+```bash
+docker update --restart=no docker-pylon_ros2_camera-1
+```
+
+The next `docker compose up -d` recreates the service with the updated mount
+configuration; no image rebuild is needed.
+
 ### Using docker run directly
 
 ```bash
