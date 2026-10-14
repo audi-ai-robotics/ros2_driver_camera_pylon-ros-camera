@@ -301,8 +301,8 @@ docker compose exec -T pylon_ros2_camera /entrypoint.sh \
     --output /tmp/camera_calibration_recalibrated.yaml
 ```
 
-4. Im Livebild das calib.io-Board vollständig zeigen. Boarddaten: 24 Spalten,
-   17 Zeilen, Feldgröße 15 mm, Markergröße 11 mm, `DICT_5X5`, ChArUco Legacy.
+4. Im Livebild das calib.io-Board vollständig zeigen. Boarddaten: 17 Spalten,
+   28 Zeilen, Feldgröße 20 mm, Markergröße 15 mm, `DICT_5X5`, ChArUco Legacy.
    Mit `s` mindestens 12 Ansichten aufnehmen. Position, Neigung und Abstand
    zwischen den Aufnahmen variieren.
 

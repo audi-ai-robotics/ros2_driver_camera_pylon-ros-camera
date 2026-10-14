@@ -27,4 +27,8 @@ if (EXISTS "${_PYLON_CONFIG}")
     endforeach()
 else()
     set(Pylon_FOUND FALSE)
+    message(FATAL_ERROR
+        "Basler pylon SDK not found: ${_PYLON_CONFIG} does not exist. "
+        "Install the pylon SDK (including development headers), or set "
+        "PYLON_ROOT to its installation directory, then reconfigure.")
 endif()

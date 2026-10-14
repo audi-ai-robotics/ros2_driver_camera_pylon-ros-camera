@@ -66,27 +66,32 @@ def make_board(columns, rows, square_size, marker_size, legacy, dictionary_id):
     return dictionary, board
 
 
-def detect_charuco(image, dictionary, board):
+def detect_charuco(image, dictionary, board, charuco_detector=None):
     aruco = cv2.aruco
-    if hasattr(aruco, "ArucoDetector"):
-        parameters = aruco.DetectorParameters()
-        detector = aruco.ArucoDetector(dictionary, parameters)
-        marker_corners, marker_ids, _ = detector.detectMarkers(image)
+    if charuco_detector is not None:
+        corners, ids, marker_corners, marker_ids = charuco_detector.detectBoard(
+            image
+        )
     else:
-        parameters_factory = getattr(aruco, "DetectorParameters_create", None)
-        parameters = (
-            parameters_factory()
-            if parameters_factory is not None
-            else aruco.DetectorParameters()
+        if hasattr(aruco, "ArucoDetector"):
+            parameters = aruco.DetectorParameters()
+            detector = aruco.ArucoDetector(dictionary, parameters)
+            marker_corners, marker_ids, _ = detector.detectMarkers(image)
+        else:
+            parameters_factory = getattr(aruco, "DetectorParameters_create", None)
+            parameters = (
+                parameters_factory()
+                if parameters_factory is not None
+                else aruco.DetectorParameters()
+            )
+            marker_corners, marker_ids, _ = aruco.detectMarkers(
+                image, dictionary, parameters=parameters
+            )
+        if marker_ids is None or len(marker_ids) < 2:
+            return None, None, marker_corners, marker_ids
+        _, corners, ids = aruco.interpolateCornersCharuco(
+            marker_corners, marker_ids, image, board
         )
-        marker_corners, marker_ids, _ = aruco.detectMarkers(
-            image, dictionary, parameters=parameters
-        )
-    if marker_ids is None or len(marker_ids) < 2:
-        return None, None, marker_corners, marker_ids
-    _, corners, ids = aruco.interpolateCornersCharuco(
-        marker_corners, marker_ids, image, board
-    )
     return corners, ids, marker_corners, marker_ids
 
 
@@ -165,10 +170,10 @@ def main():
     )
     parser.add_argument("--output", default="/tmp/camera_calibration.yaml")
     parser.add_argument("--camera-name", default="pylon_camera")
-    parser.add_argument("--columns", type=int, default=24)
+    parser.add_argument("--columns", type=int, default=28)
     parser.add_argument("--rows", type=int, default=17)
-    parser.add_argument("--square-size", type=float, default=0.015)
-    parser.add_argument("--marker-size", type=float, default=0.011)
+    parser.add_argument("--square-size", type=float, default=0.02)
+    parser.add_argument("--marker-size", type=float, default=0.015)
     parser.add_argument("--min-samples", type=int, default=12)
     parser.add_argument(
         "--legacy",
@@ -198,7 +203,12 @@ def main():
             args.legacy,
             dictionary_id,
         )
-        candidates.append((name, dictionary, board, []))
+        charuco_detector = (
+            cv2.aruco.CharucoDetector(board)
+            if hasattr(cv2.aruco, "CharucoDetector")
+            else None
+        )
+        candidates.append((name, dictionary, board, [], charuco_detector))
 
     rclpy.init(args=None)
     node = ImageSubscriber(args.topic)
@@ -225,9 +235,9 @@ def main():
             image_size = current_size
 
             detections = []
-            for name, dictionary, board, _ in candidates:
+            for name, dictionary, board, _, charuco_detector in candidates:
                 corners, ids, marker_corners, marker_ids = detect_charuco(
-                    image, dictionary, board
+                    image, dictionary, board, charuco_detector
                 )
                 count = 0 if ids is None else len(ids)
                 detections.append(
@@ -295,7 +305,7 @@ def main():
             )
 
         results = []
-        for name, _, board, observations in candidates:
+        for name, _, board, observations, _ in candidates:
             object_points = board_corners(board)
             object_views = []
             image_views = []

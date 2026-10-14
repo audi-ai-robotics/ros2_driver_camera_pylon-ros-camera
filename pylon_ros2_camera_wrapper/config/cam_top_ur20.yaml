@@ -1,0 +1,11 @@
+# Configuration for the UR20 cell camera with IP 10.20.20.70 to 10.20.20.72
+/**:
+  ros__parameters:
+    camera_frame: cam_top
+    device_ip_address: "10.21.21.72"
+    startup_user_set: UserSet1
+    mtu_size: 1500  
+    frame_rate: 30.0
+    image_encoding: "bayer_rggb8"
+    inter_pkg_delay: 0
+    camera_info_url: "package://pylon_ros2_camera_wrapper/config/cam_top_calibration.yaml"
